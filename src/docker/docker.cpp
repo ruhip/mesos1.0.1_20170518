@@ -496,7 +496,8 @@ Future<Option<int>> Docker::run(
     const Option<map<string, string>>& env,
     const Option<vector<Device>>& devices,
     const process::Subprocess::IO& _stdout,
-    const process::Subprocess::IO& _stderr) const
+    const process::Subprocess::IO& _stderr,
+    const std::string& mhostip) const
 {
   if (!containerInfo.has_docker()) {
     return Failure("No docker info found in container info");
@@ -546,14 +547,20 @@ Future<Option<int>> Docker::run(
       // Skip to avoid duplicate environment variables.
       continue;
     }
-    argv.push_back("-e");
+    /*argv.push_back("-e");
     argv.push_back(variable.name() + "=" + variable.value());
+    */
   }
 
+  /*
   argv.push_back("-e");
   argv.push_back("MESOS_SANDBOX=" + mappedDirectory);
   argv.push_back("-e");
   argv.push_back("MESOS_CONTAINER_NAME=" + name);
+  */
+
+  argv.push_back("-v");
+  argv.push_back("/var/lib/lxcfs/proc/:/docker/proc/:rw");
 
   Option<string> volumeDriver;
   foreach (const Volume& volume, containerInfo.volumes()) {
@@ -646,7 +653,7 @@ Future<Option<int>> Docker::run(
 
   const string& image = dockerInfo.image();
 
-  argv.push_back("--net");
+ // argv.push_back("--net");
   string network;
   switch (dockerInfo.network()) {
     case ContainerInfo::DockerInfo::HOST: network = "host"; break;
@@ -681,7 +688,7 @@ Future<Option<int>> Docker::run(
                             stringify(dockerInfo.network()));
   }
 
-  argv.push_back(network);
+  //argv.push_back(network);
 
   if (containerInfo.has_hostname()) {
     if (network == "host") {
@@ -693,9 +700,23 @@ Future<Option<int>> Docker::run(
   }
 
   foreach (const Parameter& parameter, dockerInfo.parameters()) {
+ 
+    LOG(INFO)<<"froad:parameter: "<<parameter.key()<<","<<parameter.value(); 
+    if( strcmp(parameter.key().c_str(),"net") == 0 )
+    {
+         LOG(INFO)<<"froad:net,so continue";
+         network = parameter.value();
+         continue;
+    }  
     argv.push_back("--" + parameter.key() + "=" + parameter.value());
   }
 
+  if( mhostip.length() > 0 )
+  {
+     argv.push_back("--env=mHOST=" + mhostip);
+  }
+  argv.push_back("--net");
+  argv.push_back(network);
   if (dockerInfo.port_mappings().size() > 0) {
     if (network == "host" || network == "none"  ) {
       return Failure("Port mappings are only supported for bridge and "
