@@ -496,8 +496,7 @@ Future<Option<int>> Docker::run(
     const Option<map<string, string>>& env,
     const Option<vector<Device>>& devices,
     const process::Subprocess::IO& _stdout,
-    const process::Subprocess::IO& _stderr,
-    const std::string& mhostip) const
+    const process::Subprocess::IO& _stderr) const
 {
   if (!containerInfo.has_docker()) {
     return Failure("No docker info found in container info");
@@ -546,6 +545,11 @@ Future<Option<int>> Docker::run(
         env.get().find(variable.name()) != env.get().end()) {
       // Skip to avoid duplicate environment variables.
       continue;
+    }
+    LOG(INFO)<<"froad:env run:"<<variable.name()<<","<<variable.value();
+    if( variable.name().compare("HOST") == 0 )
+    {
+         argv.push_back("--env=mHOST=" + variable.value()); 
     }
     /*argv.push_back("-e");
     argv.push_back(variable.name() + "=" + variable.value());
@@ -710,11 +714,12 @@ Future<Option<int>> Docker::run(
     }  
     argv.push_back("--" + parameter.key() + "=" + parameter.value());
   }
-
+/*
   if( mhostip.length() > 0 )
   {
      argv.push_back("--env=mHOST=" + mhostip);
   }
+*/
   argv.push_back("--net");
   argv.push_back(network);
   if (dockerInfo.port_mappings().size() > 0) {

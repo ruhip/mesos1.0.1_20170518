@@ -154,8 +154,7 @@ public:
       const process::Subprocess::IO& _stdout =
         process::Subprocess::FD(STDOUT_FILENO),
       const process::Subprocess::IO& _stderr =
-        process::Subprocess::FD(STDERR_FILENO),
-       const std::string& mhostip="")
+        process::Subprocess::FD(STDERR_FILENO))
     const;
 
   // Returns the current docker version.

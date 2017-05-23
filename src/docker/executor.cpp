@@ -148,8 +148,15 @@ public:
     CHECK(task.has_container());
     CHECK(task.has_command());
 
+/*
+    foreach (const Environment::Variable& variable,
+           task.command().environment().variables()) {
+
+        LOG(INFO)<<"froad:env commandinfo.env:"<<variable.name()<<","<<variable.value();
+    }
+*/
     CHECK(task.container().type() == ContainerInfo::DOCKER);
-    string mhostip = stringify(self().address.ip);
+    //string mhostip = stringify(self().address.ip);
     // We're adding task and executor resources to launch docker since
     // the DockerContainerizer updates the container cgroup limits
     // directly and it expects it to be the sum of both task and
@@ -166,8 +173,7 @@ public:
         taskEnvironment,
         None(), // No extra devices.
         Subprocess::FD(STDOUT_FILENO),
-        Subprocess::FD(STDERR_FILENO),
-        mhostip);
+        Subprocess::FD(STDERR_FILENO));
 
     run->onAny(defer(self(), &Self::reaped, lambda::_1));
 
