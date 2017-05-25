@@ -519,7 +519,7 @@ Future<Option<int>> Docker::run(
     Option<double> cpus = resources.get().cpus();
     if (cpus.isSome()) {
       uint64_t cpuShare =
-        std::max((uint64_t) (CPU_SHARES_PER_CPU * cpus.get()), MIN_CPU_SHARES);
+        std::max((uint64_t) (CPU_SHARES_PER_CPU * (10 * cpus.get())), MIN_CPU_SHARES);
       argv.push_back("--cpu-shares");
       argv.push_back(stringify(cpuShare));
     }
